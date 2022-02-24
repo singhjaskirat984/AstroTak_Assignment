@@ -1,3 +1,4 @@
+import 'package:astrotak_assignment/providers/all_relative_provider.dart';
 import 'package:astrotak_assignment/providers/ask_question_provider.dart';
 import 'package:astrotak_assignment/screens/ask_a_question_screen.dart';
 import 'package:astrotak_assignment/utilities/constants.dart';
@@ -8,7 +9,8 @@ import 'package:provider/provider.dart';
 void main() {
   runApp(MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AskQuestionProvider(),)
+        ChangeNotifierProvider(create: (_) => AskQuestionProvider(),),
+        ChangeNotifierProvider(create: (_) => AllRelativeProvider()),
       ],
       child: const MyApp()));
 }

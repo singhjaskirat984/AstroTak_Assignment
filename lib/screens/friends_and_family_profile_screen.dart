@@ -1,7 +1,10 @@
+import 'package:astrotak_assignment/providers/all_relative_provider.dart';
+import 'package:astrotak_assignment/utilities/loading_enum.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 import '../components/button.dart';
 import '../utilities/size_config.dart';
@@ -16,8 +19,7 @@ class FriendsAndFamilyProfileScreen extends StatefulWidget {
       _FriendsAndFamilyProfileScreenState();
 }
 
-class _FriendsAndFamilyProfileScreenState
-    extends State<FriendsAndFamilyProfileScreen> {
+class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileScreen> {
   late bool _addNewProfile = false;
   final List<String> amPmList = ['AM', 'PM'];
   int _selectedIndex = 0;
@@ -33,7 +35,15 @@ class _FriendsAndFamilyProfileScreenState
   String relationDropDown = 'Father';
 
   @override
+  void initState() {
+    context.read<AllRelativeProvider>().getAllRelativesData();
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final allRelativeProvider = Provider.of<AllRelativeProvider>(context);
+    final allRelativesModel = Provider.of<AllRelativeProvider>(context, listen: true).allRelativesModel;
     return Stack(
       children: [
         (_addNewProfile)
@@ -256,6 +266,22 @@ class _FriendsAndFamilyProfileScreenState
                     const SizedBox(
                       height: 20.0,
                     ),
+                    (allRelativeProvider.loadingStatus == LoadingStatus.completed) ? ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: allRelativesModel?.data.allRelatives.length,
+                        itemBuilder: (context, index){
+                        String? name = allRelativesModel?.data.allRelatives[index].fullName;
+                        String? dob = allRelativesModel?.data.allRelatives[index].birthDetails.dobDay.toString()??"null" "-" "${allRelativesModel?.data.allRelatives[index].birthDetails.dobMonth}" "-" "${allRelativesModel?.data.allRelatives[index].birthDetails.dobYear}";
+                        String? tob = allRelativesModel?.data.allRelatives[index].birthDetails.tobHour.toString()??"null" ":" "${allRelativesModel?.data.allRelatives[index].birthDetails.tobMin}";
+                        String? relation = allRelativesModel?.data.allRelatives[index].relation;
+                        print("$name $dob $tob $relation");
+                        return _relativeCard(name!,dob,tob,relation!);
+                        }
+                    ) : const Center(child: CircularProgressIndicator(),),
+                    const SizedBox(
+                      height: 20.0,
+                    ),
                     Center(
                       child: ElevatedButton(
                         onPressed: () {
@@ -311,6 +337,33 @@ class _FriendsAndFamilyProfileScreenState
               ),
             )),
       ],
+    );
+  }
+
+  Widget _relativeCard(String name, String dob, String tob, String relation){
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 15.0),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 60,
+            width: SizeConfig.screenWidth,
+            child: Card(
+              elevation: 2.0,
+              color: Colors.grey,
+              child: Row(
+                children: [
+                  Expanded(child: Text(name)),
+                  Expanded(child: Text(dob)),
+                  Expanded(child: Text(tob)),
+                  Expanded(child: Text(relation)),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(height: 20.0,)
+        ],
+      ),
     );
   }
 

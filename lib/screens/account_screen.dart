@@ -5,6 +5,9 @@ import 'package:astrotak_assignment/utilities/size_config.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/all_relative_provider.dart';
 
 class AccountScreen extends StatefulWidget {
   static const String id = 'account_screen';
@@ -88,4 +91,5 @@ class _AccountScreenState extends State<AccountScreen> with TickerProviderStateM
         )
     );
   }
+
 }
