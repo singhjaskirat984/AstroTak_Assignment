@@ -90,7 +90,17 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
                               GestureDetector(
                                   onTap: () {
                                     setState(() {
+                                      yearController.clear();
+                                      nameController.clear();
+                                      dayController.clear();
+                                      monthController.clear();
+                                      hourController.clear();
+                                      minutesController.clear();
+                                      placeController.clear();
+                                      genderDropDown = "MALE";
+                                      relationDropDown = "Father";
                                       _addNewProfile = false;
+                                      _editProfile = false;
                                     });
                                   },
                                   child: const Icon(
@@ -100,7 +110,10 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
                               const SizedBox(
                                 width: 22.0,
                               ),
-                              const Text(
+                              (_editProfile) ? const Text(
+                                "Edit Profile",
+                                style: TextStyle(fontSize: 22),
+                              ) : const Text(
                                 "Add New Profile",
                                 style: TextStyle(fontSize: 22),
                               )

@@ -20,5 +20,5 @@ class AllRelativeProvider with ChangeNotifier {
       notifyListeners();
     }
   }
-  
+
 }
