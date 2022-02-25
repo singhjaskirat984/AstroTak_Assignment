@@ -334,7 +334,7 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
                       const SizedBox(
                         height: 20.0,
                       ),
-                      (allRelativeProvider.loadingStatus == LoadingStatus.completed) ? (allRelativeProvider.loadingStatus == LoadingStatus.empty) ? Container() : ListView.builder(
+                      (allRelativeProvider.loadingStatus == LoadingStatus.completed) ? ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: allRelativesModel?.data.allRelatives.length,
@@ -349,7 +349,7 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
                           print("$name $dob $tob $relation");
                           return _relativeCard(name!,dob,tob,relation!,uuid!,gender!,place!);
                           }
-                      ) : const Center(child: CircularProgressIndicator(),),
+                      ) : (allRelativeProvider.loadingStatus == LoadingStatus.empty) ? Container() : const Center(child: CircularProgressIndicator(),),
                       const SizedBox(
                         height: 20.0,
                       ),
