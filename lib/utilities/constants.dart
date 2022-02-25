@@ -16,6 +16,7 @@ const kLeftPadding = 15.0;
 const kRightPadding = 15.0;
 const kSizedBoxHeight = 20.0;
 const kBoxCurve = 15.0;
+const bgGreyColor = Color(0xfff2f2f2);
 
 const kPrimaryColor = Color.fromRGBO(201, 16, 90, 1);
 

@@ -1,12 +1,17 @@
 import 'package:astrotak_assignment/providers/all_relative_provider.dart';
+import 'package:astrotak_assignment/services/all_relatives_service.dart';
 import 'package:astrotak_assignment/utilities/loading_enum.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../components/button.dart';
+import '../components/snackbar.dart';
+import '../utilities/modal_progress_hud.dart';
 import '../utilities/size_config.dart';
 
 class FriendsAndFamilyProfileScreen extends StatefulWidget {
@@ -33,6 +38,24 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
   TextEditingController placeController = TextEditingController();
   String genderDropDown = 'MALE';
   String relationDropDown = 'Father';
+  late bool _loading = false;
+  late bool _editProfile = false;
+  late String _editUUID = "initial";
+  final List<String> relation = [
+    'Father',
+    'Mother',
+    'Brother',
+    'Sister',
+    'Spouse',
+    'Son',
+    'Daughter',
+    'Father in law',
+    'Mother in law',
+    'Brother in law',
+    'Sister in law',
+    'Daughter in law',
+    'Uncle'
+  ];
 
   @override
   void initState() {
@@ -44,13 +67,201 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
   Widget build(BuildContext context) {
     final allRelativeProvider = Provider.of<AllRelativeProvider>(context);
     final allRelativesModel = Provider.of<AllRelativeProvider>(context, listen: true).allRelativesModel;
-    return Stack(
-      children: [
-        (_addNewProfile)
-            ? SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Form(
-                  key: _formKey,
+    return ModalProgressHUD(
+      inAsyncCall: _loading,
+      child: Stack(
+        children: [
+          (_addNewProfile)
+              ? SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(
+                          height: 70.0,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _addNewProfile = false;
+                                    });
+                                  },
+                                  child: const Icon(
+                                    Icons.arrow_back_ios_new_rounded,
+                                    color: Colors.black,
+                                  )),
+                              const SizedBox(
+                                width: 22.0,
+                              ),
+                              const Text(
+                                "Add New Profile",
+                                style: TextStyle(fontSize: 22),
+                              )
+                            ],
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 20.0,
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 15.0),
+                          child: Text(
+                            "Name",
+                            style: TextStyle(
+                                color: Colors.black.withOpacity(0.5),
+                                fontSize: 13,
+                                fontWeight: FontWeight.normal),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 7.0,
+                        ),
+                        _buildNameInput(),
+                        const SizedBox(
+                          height: 10.0,
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 15.0),
+                          child: Text(
+                            "Date Of Birth",
+                            style: TextStyle(
+                                color: Colors.black.withOpacity(0.5),
+                                fontSize: 13,
+                                fontWeight: FontWeight.normal),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 7.0,
+                        ),
+                        _buildDOBInput(),
+                        const SizedBox(
+                          height: 10.0,
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 15.0),
+                          child: Text(
+                            "Time of Birth",
+                            style: TextStyle(
+                                color: Colors.black.withOpacity(0.5),
+                                fontSize: 13,
+                                fontWeight: FontWeight.normal),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 7.0,
+                        ),
+                        _buildTOBInput(),
+                        const SizedBox(
+                          height: 10.0,
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 15.0),
+                          child: Text(
+                            "Place of Birth",
+                            style: TextStyle(
+                                color: Colors.black.withOpacity(0.5),
+                                fontSize: 13,
+                                fontWeight: FontWeight.normal),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 7.0,
+                        ),
+                        _buildPOBInput(),
+                        const SizedBox(
+                          height: 10.0,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 15),
+                          child: Row(
+                            children: [
+                              Expanded(child: _buildGenderInput()),
+                              const SizedBox(
+                                width: 10.0,
+                              ),
+                              Expanded(
+                                child: _buildRelationInput(),
+                              )
+                            ],
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 20.0,
+                        ),
+                        (_editProfile) ? Center(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                _formKey.currentState!.save();
+                                _updateChanges();
+                              }
+                            },
+                            child: const Text(
+                              "Update Changes",
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12.0,
+                                  fontWeight: FontWeight.normal),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            style: ButtonStyle(
+                              shape: MaterialStateProperty.all<
+                                  RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(5.0),
+                                      side: const BorderSide(
+                                          color: Colors.orange))),
+                              // maximumSize: MaterialStateProperty.all<Size>(const Size(170, 40)),
+                              // minimumSize: MaterialStateProperty.all<Size>(const Size(170, 40)),
+                              // foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                              backgroundColor:
+                              MaterialStateProperty.all<Color>(Colors.orange),
+                            ),
+                          ),
+                        ) : Center(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                _formKey.currentState!.save();
+                                _submit();
+                              }
+                            },
+                            child: const Text(
+                              "Save Changes",
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12.0,
+                                  fontWeight: FontWeight.normal),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            style: ButtonStyle(
+                              shape: MaterialStateProperty.all<
+                                      RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(5.0),
+                                      side: const BorderSide(
+                                          color: Colors.orange))),
+                              // maximumSize: MaterialStateProperty.all<Size>(const Size(170, 40)),
+                              // minimumSize: MaterialStateProperty.all<Size>(const Size(170, 40)),
+                              // foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                              backgroundColor:
+                                  MaterialStateProperty.all<Color>(Colors.orange),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -59,127 +270,85 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _addNewProfile = false;
-                                  });
-                                },
-                                child: const Icon(
-                                  Icons.arrow_back_ios_new_rounded,
-                                  color: Colors.black,
-                                )),
-                            const SizedBox(
-                              width: 22.0,
-                            ),
-                            const Text(
-                              "Add New Profile",
-                              style: TextStyle(fontSize: 22),
-                            )
-                          ],
-                        ),
+                        child: walletBanner(),
                       ),
                       const SizedBox(
                         height: 20.0,
                       ),
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 15.0),
-                        child: Text(
-                          "Name",
-                          style: TextStyle(
-                              color: Colors.black.withOpacity(0.5),
-                              fontSize: 13,
-                              fontWeight: FontWeight.normal),
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: SizedBox(
+                          width: SizeConfig.screenWidth * 0.7,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                  child: Text(
+                                "Name",
+                                style: TextStyle(
+                                    color: Colors.indigo.withOpacity(0.6),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.normal),
+                              )),
+                              Expanded(
+                                  child: Text(
+                                "DOB",
+                                style: TextStyle(
+                                    color: Colors.indigo.withOpacity(0.6),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.normal),
+                              )),
+                              Expanded(
+                                  child: Text(
+                                "TOB",
+                                style: TextStyle(
+                                    color: Colors.indigo.withOpacity(0.6),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.normal),
+                              )),
+                              Expanded(
+                                  child: Text(
+                                "Relation",
+                                style: TextStyle(
+                                    color: Colors.indigo.withOpacity(0.6),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.normal),
+                              )),
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(
-                        height: 7.0,
+                        height: 20.0,
                       ),
-                      _buildNameInput(),
-                      const SizedBox(
-                        height: 10.0,
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 15.0),
-                        child: Text(
-                          "Date Of Birth",
-                          style: TextStyle(
-                              color: Colors.black.withOpacity(0.5),
-                              fontSize: 13,
-                              fontWeight: FontWeight.normal),
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 7.0,
-                      ),
-                      _buildDOBInput(),
-                      const SizedBox(
-                        height: 10.0,
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 15.0),
-                        child: Text(
-                          "Time of Birth",
-                          style: TextStyle(
-                              color: Colors.black.withOpacity(0.5),
-                              fontSize: 13,
-                              fontWeight: FontWeight.normal),
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 7.0,
-                      ),
-                      _buildTOBInput(),
-                      const SizedBox(
-                        height: 10.0,
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 15.0),
-                        child: Text(
-                          "Place of Birth",
-                          style: TextStyle(
-                              color: Colors.black.withOpacity(0.5),
-                              fontSize: 13,
-                              fontWeight: FontWeight.normal),
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 7.0,
-                      ),
-                      _buildPOBInput(),
-                      const SizedBox(
-                        height: 10.0,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                        child: Row(
-                          children: [
-                            Expanded(child: _buildGenderInput()),
-                            const SizedBox(
-                              width: 10.0,
-                            ),
-                            Expanded(
-                              child: _buildRelationInput(),
-                            )
-                          ],
-                        ),
-                      ),
+                      (allRelativeProvider.loadingStatus == LoadingStatus.completed) ? (allRelativeProvider.loadingStatus == LoadingStatus.empty) ? Container() : ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: allRelativesModel?.data.allRelatives.length,
+                          itemBuilder: (context, index){
+                          String? name = allRelativesModel?.data.allRelatives[index].fullName;
+                          String? dob = "${allRelativesModel?.data.allRelatives[index].birthDetails.dobDay}-${allRelativesModel?.data.allRelatives[index].birthDetails.dobMonth}-${allRelativesModel?.data.allRelatives[index].birthDetails.dobYear}";
+                          String? tob = "${allRelativesModel?.data.allRelatives[index].birthDetails.tobHour}:${allRelativesModel?.data.allRelatives[index].birthDetails.tobMin}";
+                          String? relation = allRelativesModel?.data.allRelatives[index].relation;
+                          String? uuid = allRelativesModel?.data.allRelatives[index].uuid;
+                          String? gender = allRelativesModel?.data.allRelatives[index].gender;
+                          String? place = allRelativesModel?.data.allRelatives[index].birthPlace.placeName;
+                          print("$name $dob $tob $relation");
+                          return _relativeCard(name!,dob,tob,relation!,uuid!,gender!,place!);
+                          }
+                      ) : const Center(child: CircularProgressIndicator(),),
                       const SizedBox(
                         height: 20.0,
                       ),
                       Center(
                         child: ElevatedButton(
                           onPressed: () {
-                            if (_formKey.currentState!.validate()) {
-                              _formKey.currentState!.save();
-                              // _submit();
-                            }
+                            setState(() {
+                              _addNewProfile = true;
+                            });
                           },
                           child: const Text(
-                            "Save Changes",
+                            "+ Add New Profile",
                             style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 12.0,
@@ -187,12 +356,12 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
                             overflow: TextOverflow.ellipsis,
                           ),
                           style: ButtonStyle(
-                            shape: MaterialStateProperty.all<
-                                    RoundedRectangleBorder>(
-                                RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(5.0),
-                                    side: const BorderSide(
-                                        color: Colors.orange))),
+                            shape:
+                                MaterialStateProperty.all<RoundedRectangleBorder>(
+                                    RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(5.0),
+                                        side: const BorderSide(
+                                            color: Colors.orange))),
                             // maximumSize: MaterialStateProperty.all<Size>(const Size(170, 40)),
                             // minimumSize: MaterialStateProperty.all<Size>(const Size(170, 40)),
                             // foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
@@ -204,143 +373,191 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
                     ],
                   ),
                 ),
-              )
-            : SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(
-                      height: 70.0,
+          Positioned(
+              top: 0,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                child: Row(
+                  children: const [
+                    Button(
+                      txt: 'My Profile',
+                      txtColor: Colors.black,
+                      btnColor: Colors.white,
+                      borderColor: Colors.white,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                      child: walletBanner(),
-                    ),
-                    const SizedBox(
-                      height: 20.0,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: SizedBox(
-                        width: SizeConfig.screenWidth * 0.7,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Expanded(
-                                child: Text(
-                              "Name",
-                              style: TextStyle(
-                                  color: Colors.indigo.withOpacity(0.6),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.normal),
-                            )),
-                            Expanded(
-                                child: Text(
-                              "DOB",
-                              style: TextStyle(
-                                  color: Colors.indigo.withOpacity(0.6),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.normal),
-                            )),
-                            Expanded(
-                                child: Text(
-                              "TOB",
-                              style: TextStyle(
-                                  color: Colors.indigo.withOpacity(0.6),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.normal),
-                            )),
-                            Expanded(
-                                child: Text(
-                              "Relation",
-                              style: TextStyle(
-                                  color: Colors.indigo.withOpacity(0.6),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.normal),
-                            )),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 20.0,
-                    ),
-                    (allRelativeProvider.loadingStatus == LoadingStatus.completed) ? ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: allRelativesModel?.data.allRelatives.length,
-                        itemBuilder: (context, index){
-                        String? name = allRelativesModel?.data.allRelatives[index].fullName;
-                        String? dob = allRelativesModel?.data.allRelatives[index].birthDetails.dobDay.toString()??"null" "-" "${allRelativesModel?.data.allRelatives[index].birthDetails.dobMonth}" "-" "${allRelativesModel?.data.allRelatives[index].birthDetails.dobYear}";
-                        String? tob = allRelativesModel?.data.allRelatives[index].birthDetails.tobHour.toString()??"null" ":" "${allRelativesModel?.data.allRelatives[index].birthDetails.tobMin}";
-                        String? relation = allRelativesModel?.data.allRelatives[index].relation;
-                        print("$name $dob $tob $relation");
-                        return _relativeCard(name!,dob,tob,relation!);
-                        }
-                    ) : const Center(child: CircularProgressIndicator(),),
-                    const SizedBox(
-                      height: 20.0,
-                    ),
-                    Center(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            _addNewProfile = true;
-                          });
-                        },
-                        child: const Text(
-                          "+ Add New Profile",
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12.0,
-                              fontWeight: FontWeight.normal),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        style: ButtonStyle(
-                          shape:
-                              MaterialStateProperty.all<RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(5.0),
-                                      side: const BorderSide(
-                                          color: Colors.orange))),
-                          // maximumSize: MaterialStateProperty.all<Size>(const Size(170, 40)),
-                          // minimumSize: MaterialStateProperty.all<Size>(const Size(170, 40)),
-                          // foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
-                          backgroundColor:
-                              MaterialStateProperty.all<Color>(Colors.orange),
-                        ),
-                      ),
+                    Button(
+                      txt: 'Friends and Family Profile',
+                      txtColor: Colors.white,
+                      btnColor: Colors.orange,
+                      borderColor: Colors.orange,
                     ),
                   ],
                 ),
-              ),
-        Positioned(
-            top: 0,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10.0),
-              child: Row(
-                children: const [
-                  Button(
-                    txt: 'My Profile',
-                    txtColor: Colors.black,
-                    btnColor: Colors.white,
-                    borderColor: Colors.white,
-                  ),
-                  Button(
-                    txt: 'Friends and Family Profile',
-                    txtColor: Colors.white,
-                    btnColor: Colors.orange,
-                    borderColor: Colors.orange,
-                  ),
-                ],
-              ),
-            )),
-      ],
+              )),
+        ],
+      ),
     );
   }
 
-  Widget _relativeCard(String name, String dob, String tob, String relation){
+  _submit() async {
+    FocusScope.of(context).requestFocus(FocusNode());
+
+    setState(() {
+      _loading = true;
+    });
+    Map postBody = {
+      "birthDetails": {
+        "dobDay": dayController.text,
+        "dobMonth": monthController.text,
+        "dobYear": yearController.text,
+        "tobHour": hourController.text,
+        "tobMin": minutesController.text,
+        "meridiem": amPmList[_selectedIndex],
+      },
+      "birthPlace": {
+        "placeName": placeController.text,
+        "placeId": "ChIJwTa3v_6nkjkRC_b2yajUF_M"
+      },
+      "firstName": nameController.text,
+      "lastName": "",
+      "relationId": relation.indexOf(relationDropDown)+1,
+      "gender": genderDropDown,
+    };
+    Response? response = await AllRelativesService().addRelative(postBody);
+    if(response?.data!=null){
+      setState(() {
+        _loading = false;
+      });
+      ShowSnackBar().showSnackBar(
+        context,
+        "New Profile Added",
+        duration: const Duration(milliseconds: 450),
+        noAction: true,
+      );
+      context.read<AllRelativeProvider>().getAllRelativesData();
+      setState(() {
+        yearController.clear();
+        nameController.clear();
+        dayController.clear();
+        monthController.clear();
+        hourController.clear();
+        minutesController.clear();
+        placeController.clear();
+        genderDropDown = "MALE";
+        relationDropDown = "Father";
+        _addNewProfile = false;
+      });
+    }else{
+      ShowSnackBar().showSnackBar(
+        context,
+        "Something went wrong",
+        duration: const Duration(milliseconds: 450),
+        noAction: true,
+      );
+    }
+  }
+
+  _edit(String name, String dob, String tob, String relation, String uuid, String gender, String place) async {
+    yearController.text = dob.splitMapJoin("-")[2];
+    nameController.text = name;
+    dayController.text = dob.split("-")[0];
+    monthController.text = dob.split("-")[1];
+    hourController.text = tob.splitMapJoin(":")[0];
+    minutesController.text = tob.split(":")[1];
+    placeController.text = place;
+    genderDropDown = gender;
+    relationDropDown = relation;
+    setState(() {
+      _editUUID = uuid;
+      _addNewProfile = true;
+      _editProfile = true;
+    });
+  }
+
+  _updateChanges() async {
+    setState(() {
+      _loading = true;
+    });
+    Map postBody = {
+      "birthDetails": {
+        "dobDay": dayController.text,
+        "dobMonth": monthController.text,
+        "dobYear": yearController.text,
+        "tobHour": hourController.text,
+        "tobMin": minutesController.text,
+        "meridiem": amPmList[_selectedIndex],
+      },
+      "birthPlace": {
+        "placeName": placeController.text,
+        "placeId": "ChIJwTa3v_6nkjkRC_b2yajUF_M"
+      },
+      "firstName": nameController.text,
+      "lastName": "",
+      "relationId": relation.indexOf(relationDropDown)+1,
+      "gender": genderDropDown,
+    };
+    Response? response = await AllRelativesService().editRelative(_editUUID,postBody);
+    if(response?.data!=null){
+      setState(() {
+        _loading = false;
+      });
+      ShowSnackBar().showSnackBar(
+        context,
+        "Profile Edited",
+        duration: const Duration(milliseconds: 450),
+        noAction: true,
+      );
+      context.read<AllRelativeProvider>().getAllRelativesData();
+      setState(() {
+        yearController.clear();
+        nameController.clear();
+        dayController.clear();
+        monthController.clear();
+        hourController.clear();
+        minutesController.clear();
+        placeController.clear();
+        genderDropDown = "MALE";
+        relationDropDown = "Father";
+        _addNewProfile = false;
+        _editProfile = false;
+      });
+    }else{
+      ShowSnackBar().showSnackBar(
+        context,
+        "Something went wrong",
+        duration: const Duration(milliseconds: 450),
+        noAction: true,
+      );
+    }
+  }
+
+  _delete(String uuid) async{
+    setState(() {
+      _loading = true;
+    });
+    Response? response = await AllRelativesService().deleteRelative(uuid);
+    if(response?.data!=null){
+      setState(() {
+        _loading = false;
+      });
+      ShowSnackBar().showSnackBar(
+        context,
+        "Profile Deleted",
+        duration: const Duration(milliseconds: 450),
+        noAction: true,
+      );
+      context.read<AllRelativeProvider>().getAllRelativesData();
+    }else{
+      ShowSnackBar().showSnackBar(
+        context,
+        "Something went wrong",
+        duration: const Duration(milliseconds: 450),
+        noAction: true,
+      );
+    }
+  }
+
+  Widget _relativeCard(String name, String dob, String tob, String relation, String uuid,String gender, String place){
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15.0),
       child: Column(
@@ -350,18 +567,32 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
             width: SizeConfig.screenWidth,
             child: Card(
               elevation: 2.0,
-              color: Colors.grey,
-              child: Row(
-                children: [
-                  Expanded(child: Text(name)),
-                  Expanded(child: Text(dob)),
-                  Expanded(child: Text(tob)),
-                  Expanded(child: Text(relation)),
-                ],
+              color: Colors.grey.shade50,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SizedBox(width:50,child: Text(name,style: TextStyle(color: Colors.black.withOpacity(0.5),fontSize: 12),)),
+                    Text(dob,style: TextStyle(color: Colors.black.withOpacity(0.5),fontSize: 12)),
+                    Text(tob,style: TextStyle(color: Colors.black.withOpacity(0.5),fontSize: 12)),
+                    Text(relation,style: TextStyle(color: Colors.black.withOpacity(0.5),fontSize: 12)),
+                    GestureDetector(
+                      onTap: (){
+                        _edit(name, dob,tob,relation,uuid,gender,place);
+                      },
+                        child: const Icon(Icons.create_rounded,color: Colors.orange,size: 23,)),
+                    GestureDetector(
+                      onTap: (){
+                        _delete(uuid);
+                      },
+                        child: const Icon(Icons.delete,color: Colors.red,size: 23,)),
+                  ],
+                ),
               ),
             ),
           ),
-          SizedBox(height: 20.0,)
+          const SizedBox(height: 10.0,)
         ],
       ),
     );
@@ -388,10 +619,7 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
           child: DropdownButton<String>(
             underline: const SizedBox(),
             isExpanded: true,
-            items: [
-              'Father',
-              'Mother',
-            ].map((String value) {
+            items: relation.map((String value) {
               return DropdownMenuItem<String>(
                 value: value,
                 child: Padding(
@@ -510,7 +738,7 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
           ),
         ),
         onSaved: (value) {
-          // print('Password ${value}');
+          placeController.text = value!;
         },
       ),
     );
@@ -556,7 +784,7 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
                   ),
                 ),
                 onSaved: (value) {
-                  // print('Password ${value}');
+                  hourController.text = value!;
                 },
               ),
             ),
@@ -598,7 +826,7 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
                   ),
                 ),
                 onSaved: (value) {
-                  // print('Password ${value}');
+                  minutesController.text = value!;
                 },
               ),
             ),
@@ -684,7 +912,7 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
                   ),
                 ),
                 onSaved: (value) {
-                  // print('Password ${value}');
+                  dayController.text = value!;
                 },
               ),
             ),
@@ -705,7 +933,7 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
                   if (value!.isEmpty) {
                     return 'invalid';
                   }else if(int.parse(value)<1 || int.parse(value)>12){
-                    return "invalid hrs";
+                    return "invalid month";
                   }
                   return null;
                 },
@@ -726,7 +954,7 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
                   ),
                 ),
                 onSaved: (value) {
-                  // print('Password ${value}');
+                  monthController.text = value!;
                 },
               ),
             ),
@@ -766,7 +994,7 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
                   ),
                 ),
                 onSaved: (value) {
-                  // print('Password ${value}');
+                  yearController.text = value!;
                 },
               ),
             )
@@ -804,7 +1032,7 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
           ),
         ),
         onSaved: (value) {
-          // print('Password ${value}');
+          nameController.text = value!;
         },
       ),
     );

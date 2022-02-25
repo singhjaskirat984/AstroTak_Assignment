@@ -17,9 +17,8 @@ class AllRelativeProvider with ChangeNotifier {
     }catch(e){
       print("exception $e");
       loadingStatus = LoadingStatus.empty;
+      notifyListeners();
     }
   }
-
-
-
+  
 }

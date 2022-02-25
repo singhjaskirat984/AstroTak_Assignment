@@ -15,4 +15,32 @@ class AllRelativesService {
     }
     return null;
   }
+
+  Future<Response?> addRelative(Map postBody) async {
+    Response response = await _dioNetworkHelper.postDataAuthHeader(url: ApiEndpoints.addRelativeApi, postBody: postBody, headerToken: ApiEndpoints.bearerToken);
+    if(response.data != null){
+      print("response.data adding relative ${response.data}");
+      return response;
+    }
+    return null;
+  }
+
+  Future<Response?> deleteRelative(String uuid) async {
+    Response response = await _dioNetworkHelper.postDataAuthHeader(url: "${ApiEndpoints.deleteRelativeApi}$uuid", postBody: {}, headerToken: ApiEndpoints.bearerToken);
+    if(response.data != null){
+      print("response.data deleting relative ${response.data}");
+      return response;
+    }
+    return null;
+  }
+
+  Future<Response?> editRelative(String uuid, Map postBody) async {
+    Response response = await _dioNetworkHelper.postDataAuthHeader(url: "${ApiEndpoints.editRelativeApi}$uuid", postBody: postBody, headerToken: ApiEndpoints.bearerToken);
+    if(response.data != null){
+      print("response.data editing relative ${response.data}");
+      return response;
+    }
+    return null;
+  }
+
 }
