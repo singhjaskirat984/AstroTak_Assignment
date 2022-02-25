@@ -10,6 +10,7 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../components/button.dart';
+import '../components/delete_background_dialog.dart';
 import '../components/snackbar.dart';
 import '../utilities/modal_progress_hud.dart';
 import '../utilities/size_config.dart';
@@ -596,8 +597,17 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
                       },
                         child: const Icon(Icons.create_rounded,color: Colors.orange,size: 23,)),
                     GestureDetector(
-                      onTap: (){
-                        _delete(uuid);
+                      onTap: () async {
+                        bool isToBeDeleted = await showCupertinoDialog(
+                            context:context,
+                            builder:(context){
+                              return const DeleteBackgroundDialog();
+                            },
+                            barrierDismissible: true
+                        );
+                        if(isToBeDeleted){
+                          _delete(uuid);
+                        }
                       },
                         child: const Icon(Icons.delete,color: Colors.red,size: 23,)),
                   ],
