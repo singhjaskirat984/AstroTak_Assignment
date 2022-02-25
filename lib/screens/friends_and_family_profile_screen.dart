@@ -36,8 +36,8 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
   TextEditingController hourController = TextEditingController();
   TextEditingController minutesController = TextEditingController();
   TextEditingController placeController = TextEditingController();
-  String genderDropDown = 'MALE';
-  String relationDropDown = 'Father';
+  String genderDropDown = "MALE";
+  String relationDropDown = "Father";
   late bool _loading = false;
   late bool _editProfile = false;
   late String _editUUID = "initial";
@@ -471,11 +471,11 @@ class _FriendsAndFamilyProfileScreenState extends State<FriendsAndFamilyProfileS
   }
 
   _edit(String name, String dob, String tob, String relation, String uuid, String gender, String place) async {
-    yearController.text = dob.splitMapJoin("-")[2];
+    yearController.text = dob.split("-")[2];
     nameController.text = name;
     dayController.text = dob.split("-")[0];
     monthController.text = dob.split("-")[1];
-    hourController.text = tob.splitMapJoin(":")[0];
+    hourController.text = tob.split(":")[0];
     minutesController.text = tob.split(":")[1];
     placeController.text = place;
     genderDropDown = gender;
