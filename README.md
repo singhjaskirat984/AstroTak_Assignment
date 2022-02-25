@@ -11,6 +11,9 @@ the state management used in building this project is provider, UI and functiona
 
 ## For Demo Video [Click Here...]
 
+
+## Application Screenshots
+
 <p float="center">
   <img src="https://user-images.githubusercontent.com/44332209/155684777-94ac53e1-f3c1-4d8f-a95e-9ab3f7b2db80.jpg" width="250" />
   <img src="https://user-images.githubusercontent.com/44332209/155684801-6d97dbfc-d725-449f-9927-2f88cf5cbffa.jpg" width="250" /> 
